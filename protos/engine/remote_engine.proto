@@ -63,7 +63,7 @@ enum ReadOrder {
 }
 
 message TableReadRequest {
-  uint64 request_id = 1;
+  string request_id = 1;
   ReadOptions opts = 2;
   schema.ProjectedSchema projected_schema = 3;
   Predicate predicate = 4;
@@ -79,7 +79,14 @@ message ReadResponse {
   common.ResponseHeader header = 1;
   oneof output {
     storage.ArrowPayload arrow = 2;
+    // This field is used to return metric of child node when query is executed
+    // in distributed mode.
+    MetricPayload metric = 3;
   }
+}
+
+message MetricPayload {
+  string metric = 1;
 }
 
 message ColumnDesc {
@@ -157,14 +164,17 @@ enum QueryPriority {
   Low = 1;
 }
 
+enum Explain { Analyze = 0; }
+
 message ExecContext {
-  uint64 request_id = 1;
+  string request_id = 1;
   string default_catalog = 2;
   string default_schema = 3;
   // -1 means no timeout
   int64 timeout_ms = 4;
   QueryPriority priority = 5;
   string displayable_query = 6;
+  optional Explain explain = 7;
 }
 
 message ExecutePlanRequest {
